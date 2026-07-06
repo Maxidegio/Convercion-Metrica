@@ -78,8 +78,8 @@ No se avanza a la siguiente fase sin terminar la anterior.
 2. **FASE 2 — Configuración del proyecto** ✅ completada
 3. **FASE 3 — Login + Usuarios** ✅ completada
 4. **FASE 4 — Lista de productos (CRUD)** ✅ completada
-5. FASE 5 — Ajuste de cantidad + historial ← *próxima*
-6. FASE 6 — Buscador y detalle de producto
+5. **FASE 5 — Ajuste de cantidad + historial** ✅ completada
+6. FASE 6 — Buscador y detalle de producto ← *próxima*
 7. FASE 7 — Optimización y deployment
 
 ### Usuarios iniciales (seed)

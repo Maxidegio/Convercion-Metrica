@@ -75,6 +75,57 @@ export async function updateProduct(
   return { ok: true };
 }
 
+export type AdjustResult = { ok: boolean; quantity?: number; error?: string };
+
+/**
+ * Ajusta el stock de un producto al valor absoluto indicado y registra el
+ * cambio en el historial, todo en una transacción. Sin motivo: un ajuste = una
+ * entrada. Si el valor no cambia, no genera historial.
+ */
+export async function adjustQuantity(
+  productId: string,
+  newQuantity: number,
+): Promise<AdjustResult> {
+  const user = await requireAuth();
+
+  if (!Number.isInteger(newQuantity) || newQuantity < 0) {
+    return { ok: false, error: "Cantidad inválida." };
+  }
+
+  try {
+    const finalQty = await prisma.$transaction(async (tx) => {
+      const product = await tx.product.findUnique({
+        where: { id: productId },
+        select: { quantity: true },
+      });
+      if (!product) throw new Error("NOT_FOUND");
+
+      const before = product.quantity;
+      if (before === newQuantity) return before; // sin cambios, sin historial
+
+      await tx.product.update({ where: { id: productId }, data: { quantity: newQuantity } });
+      await tx.quantityChange.create({
+        data: {
+          productId,
+          userId: user.id,
+          before,
+          after: newQuantity,
+          delta: newQuantity - before,
+        },
+      });
+      return newQuantity;
+    });
+
+    revalidatePath(`/productos/${productId}`);
+    return { ok: true, quantity: finalQty };
+  } catch (error) {
+    if (error instanceof Error && error.message === "NOT_FOUND") {
+      return { ok: false, error: "Producto no encontrado." };
+    }
+    return { ok: false, error: "No se pudo guardar el cambio." };
+  }
+}
+
 export async function deleteProduct(
   _prev: ActionResult | undefined,
   formData: FormData,

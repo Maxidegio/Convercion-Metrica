@@ -1,8 +1,9 @@
 import { Fragment } from "react";
+import Link from "next/link";
 import type { Product } from "@prisma/client";
-import { BrandPill, CodeChip, StockBadge } from "@/components/ui/badges";
+import { BrandPill, CodeChip } from "@/components/ui/badges";
 import { ProductRowActions } from "./product-row-actions";
-import { LOW_STOCK } from "@/features/products/queries";
+import { ProductStepperCell } from "./product-stepper-cell";
 
 /**
  * Tabla de productos. Cuando no hay una marca filtrada, agrupa por marca
@@ -65,9 +66,16 @@ export function ProductTable({ items, grouped }: { items: Product[]; grouped: bo
                   <td className="px-4 py-2.5">
                     <CodeChip value={p.factoryCode} variant="fab" />
                   </td>
-                  <td className="px-4 py-2.5 text-sm font-semibold text-ink">{p.name}</td>
+                  <td className="px-4 py-2.5 text-sm font-semibold text-ink">
+                    <Link
+                      href={`/productos/${p.id}`}
+                      className="transition hover:text-gold-600 hover:underline"
+                    >
+                      {p.name}
+                    </Link>
+                  </td>
                   <td className="px-4 py-2.5 text-right">
-                    <StockBadge quantity={p.quantity} low={LOW_STOCK} />
+                    <ProductStepperCell productId={p.id} initial={p.quantity} />
                   </td>
                   <td className="px-4 py-2.5">
                     <ProductRowActions product={p} />

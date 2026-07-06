@@ -70,15 +70,18 @@ paginación y CRUD completo (crear/editar/borrar) funcionando sobre PostgreSQL.
 
 ---
 
-## FASE 5 — Ajuste de cantidad + historial ★
+## FASE 5 — Ajuste de cantidad + historial ★ ✅ COMPLETADA
 
-- Componente `QuantityStepper` (flechas −/+ y campo editable).
-- Endpoint de ajuste en **transacción** (producto + `quantity_changes`).
-- **UI optimista** con reversión ante error.
-- Registro automático de cada cambio (quién, cuándo, antes → después).
+- [x] `QuantityStepper` interactivo en la lista (flechas −/+ y campo editable).
+- [x] Ajuste en **transacción** (actualiza producto + inserta `quantity_changes`).
+- [x] **UI optimista** con reversión ante error; clicks rápidos agrupados
+      (debounce) en una sola entrada de historial. Sin motivo (un ajuste = listo).
+- [x] Registro automático de cada cambio (quién, cuándo, antes → después, delta).
+- [x] **Detalle de producto** con la línea de tiempo completa de movimientos.
 
-**DoD:** ajustar cantidad funciona con flechas y escribiendo, y cada cambio
-queda guardado e imborrable.
+**DoD:** verificado end-to-end — ajustar con flechas y escribiendo actualiza el
+stock, cada cambio queda registrado e imborrable con su autor, y el historial se
+ve en el detalle del producto.
 
 ---
 

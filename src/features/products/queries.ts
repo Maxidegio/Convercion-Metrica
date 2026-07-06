@@ -65,6 +65,21 @@ export async function getStockSummary(filters: ProductFilters) {
   };
 }
 
+/** Producto con su historial de cambios de cantidad (línea de tiempo). */
+export async function getProductWithHistory(id: string) {
+  const product = await prisma.product.findUnique({ where: { id } });
+  if (!product) return null;
+
+  const history = await prisma.quantityChange.findMany({
+    where: { productId: id },
+    orderBy: { createdAt: "desc" },
+    take: 200,
+    include: { user: { select: { name: true } } },
+  });
+
+  return { product, history };
+}
+
 /** Marcas con su cantidad de productos (para el filtro lateral). */
 export async function getBrandsWithCounts() {
   const rows = await prisma.product.groupBy({
