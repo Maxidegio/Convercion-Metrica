@@ -27,15 +27,24 @@ export function ProductTable({ items, grouped }: { items: Product[]; grouped: bo
       <table className="w-full border-collapse">
         <thead>
           <tr className="bg-surface">
-            {["Marca", "CÓD.MAF", "CÓD.FÁBRICA", "Descripción", "Stock", ""].map((h, i) => (
+            {(
+              [
+                { h: "Marca", cls: "text-left" },
+                { h: "CÓD.MAF", cls: "text-left" },
+                { h: "CÓD.FÁBRICA", cls: "text-left hidden sm:table-cell" },
+                { h: "Descripción", cls: "text-left" },
+                { h: "Stock", cls: "text-right" },
+                { h: "", cls: "text-right" },
+              ] as const
+            ).map((c, i) => (
               <th
-                key={h || i}
+                key={c.h || i}
                 className={
                   "border-b border-border px-4 py-3 text-[0.68rem] font-extrabold uppercase tracking-wider text-muted " +
-                  (h === "Stock" || h === "" ? "text-right" : "text-left")
+                  c.cls
                 }
               >
-                {h}
+                {c.h}
               </th>
             ))}
           </tr>
@@ -63,7 +72,7 @@ export function ProductTable({ items, grouped }: { items: Product[]; grouped: bo
                   <td className="px-4 py-2.5">
                     <CodeChip value={p.internalCode} variant="maf" />
                   </td>
-                  <td className="px-4 py-2.5">
+                  <td className="hidden px-4 py-2.5 sm:table-cell">
                     <CodeChip value={p.factoryCode} variant="fab" />
                   </td>
                   <td className="px-4 py-2.5 text-sm font-semibold text-ink">

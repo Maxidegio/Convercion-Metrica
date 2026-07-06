@@ -1,5 +1,4 @@
 import { redirect } from "next/navigation";
-import { AppHeader } from "@/components/layout/app-header";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import {
@@ -54,9 +53,7 @@ export default async function ProductosPage({
   ]);
 
   return (
-    <div className="min-h-screen">
-      <AppHeader />
-      <main className="mx-auto max-w-6xl px-5 py-8">
+    <main className="mx-auto max-w-6xl px-5 py-8">
         <div className="mb-5 flex items-end justify-between gap-4">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.24em] text-muted">
@@ -86,7 +83,6 @@ export default async function ProductosPage({
             <Pagination page={list.page} pageCount={list.pageCount} base={base} />
           </div>
         </div>
-      </main>
-    </div>
+    </main>
   );
 }

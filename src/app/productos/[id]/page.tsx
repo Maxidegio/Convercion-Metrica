@@ -1,7 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import { AppHeader } from "@/components/layout/app-header";
 import { auth } from "@/lib/auth";
 import { getProductWithHistory } from "@/features/products/queries";
 import { BrandPill, CodeChip } from "@/components/ui/badges";
@@ -22,9 +21,7 @@ export default async function ProductDetailPage({
   const { product, history } = data;
 
   return (
-    <div className="min-h-screen">
-      <AppHeader />
-      <main className="mx-auto max-w-3xl px-5 py-8">
+    <main className="mx-auto max-w-3xl px-5 py-8">
         <Link
           href="/productos"
           className="inline-flex items-center gap-1.5 text-sm font-semibold text-muted transition hover:text-ink"
@@ -66,7 +63,6 @@ export default async function ProductDetailPage({
             <HistoryTimeline history={history} />
           </div>
         </div>
-      </main>
-    </div>
+    </main>
   );
 }

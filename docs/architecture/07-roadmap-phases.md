@@ -100,11 +100,18 @@ ajuste desde el detalle con historial en vivo.
 
 ---
 
-## FASE 7 — Optimización y deployment
+## FASE 7 — Optimización y deployment 🚧 EN CURSO
 
-- Índices y consultas revisadas, paginación en la lista.
-- Pulido de UX, responsive, modo oscuro.
-- Deploy en Vercel + PostgreSQL gestionado, variables de entorno, backups.
+### Optimización ✅ COMPLETADA
+- [x] Índices GIN de trigramas (`pg_trgm`) para búsqueda rápida por texto a
+      escala (verificado: el planner usa `products_name_trgm_idx`).
+- [x] Consultas paralelas y paginación server-side.
+- [x] Responsive móvil (columna CÓD.FÁBRICA oculta en pantallas chicas).
+- [x] Estado de carga (skeleton) y layout compartido para el header.
+
+### Deployment ⏳ PENDIENTE
+- Deploy en Vercel + PostgreSQL gestionado (Neon/Supabase/Vercel Postgres).
+- Variables de entorno y secretos, migraciones en el pipeline, backups.
 
 **DoD:** sistema desplegado, estable y usable por los empleados.
 
