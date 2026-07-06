@@ -55,15 +55,18 @@ registrado.
 
 ---
 
-## FASE 4 — Lista de productos (CRUD completo)
+## FASE 4 — Lista de productos (CRUD completo) ✅ COMPLETADA
 
-- Pantalla principal: tabla de productos (marca, CÓD.MAF, CÓD.FÁBRICA, nombre, stock).
-- **Alta, edición y baja** de productos desde el sistema (formulario con Zod).
-- Importación del catálogo inicial desde `data/products.json`.
-- Validación de unicidad del código interno.
+- [x] Pantalla principal: tabla de productos (marca, CÓD.MAF, CÓD.FÁBRICA, descripción, stock).
+- [x] **Agrupación por marca** por defecto + filtro lateral de marcas con contadores.
+- [x] **Buscador** por código/descripción/marca (server-side).
+- [x] **Paginación** server-side (50 por página) para los 3.536 productos.
+- [x] Indicadores: productos, unidades, stock bajo, agotados (del conjunto filtrado).
+- [x] **Alta, edición y baja** de productos (modal + Zod + unicidad de CÓD.MAF).
+- [x] Stock mostrado con semáforo (verde/ámbar/rojo).
 
-**DoD:** se pueden crear, editar y borrar productos desde la interfaz, y el
-catálogo inicial queda cargado.
+**DoD:** verificado end-to-end en navegador — lista agrupada, búsqueda, filtro,
+paginación y CRUD completo (crear/editar/borrar) funcionando sobre PostgreSQL.
 
 ---
 
