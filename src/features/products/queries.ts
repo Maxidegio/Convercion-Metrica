@@ -4,13 +4,18 @@ import { prisma } from "@/lib/prisma";
 export const PAGE_SIZE = 50;
 export const LOW_STOCK = 5;
 
+export type SortOption = "brand" | "name" | "stock_asc" | "stock_desc";
+export type StockStatus = "all" | "low" | "out";
+
 export type ProductFilters = {
   q?: string;
   brand?: string;
   page?: number;
+  sort?: SortOption;
+  stock?: StockStatus;
 };
 
-/** WHERE compartido entre la lista y los indicadores. */
+/** WHERE base (marca + búsqueda). No incluye el filtro de estado de stock. */
 function buildWhere({ q, brand }: ProductFilters): Prisma.ProductWhereInput {
   const where: Prisma.ProductWhereInput = {};
   if (brand) where.brand = brand;
@@ -25,15 +30,33 @@ function buildWhere({ q, brand }: ProductFilters): Prisma.ProductWhereInput {
   return where;
 }
 
-/** Página de productos, ordenada por marca y luego descripción (agrupación por marca). */
+/** Agrega el filtro por estado de stock al WHERE base. */
+function applyStockStatus(
+  where: Prisma.ProductWhereInput,
+  stock: StockStatus | undefined,
+): Prisma.ProductWhereInput {
+  if (stock === "low") return { ...where, quantity: { gt: 0, lte: LOW_STOCK } };
+  if (stock === "out") return { ...where, quantity: { lte: 0 } };
+  return where;
+}
+
+const ORDER_BY: Record<SortOption, Prisma.ProductOrderByWithRelationInput[]> = {
+  brand: [{ brand: "asc" }, { name: "asc" }],
+  name: [{ name: "asc" }],
+  stock_asc: [{ quantity: "asc" }, { name: "asc" }],
+  stock_desc: [{ quantity: "desc" }, { name: "asc" }],
+};
+
+/** Página de productos según orden y filtros. */
 export async function getProducts(filters: ProductFilters) {
-  const where = buildWhere(filters);
+  const sort: SortOption = filters.sort ?? "brand";
+  const where = applyStockStatus(buildWhere(filters), filters.stock);
   const page = Math.max(1, filters.page ?? 1);
 
   const [items, total] = await Promise.all([
     prisma.product.findMany({
       where,
-      orderBy: [{ brand: "asc" }, { name: "asc" }],
+      orderBy: ORDER_BY[sort],
       skip: (page - 1) * PAGE_SIZE,
       take: PAGE_SIZE,
     }),
@@ -45,10 +68,13 @@ export async function getProducts(filters: ProductFilters) {
     total,
     page,
     pageCount: Math.max(1, Math.ceil(total / PAGE_SIZE)),
+    // Solo se agrupa visualmente por marca cuando ese es el orden y no hay
+    // una marca ya filtrada.
+    grouped: sort === "brand" && !filters.brand,
   };
 }
 
-/** Indicadores del conjunto filtrado. */
+/** Indicadores del conjunto (marca + búsqueda), independientes del filtro de estado. */
 export async function getStockSummary(filters: ProductFilters) {
   const where = buildWhere(filters);
   const [total, units, low, out] = await Promise.all([

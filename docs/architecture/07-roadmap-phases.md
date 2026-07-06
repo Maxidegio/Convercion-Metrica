@@ -85,13 +85,18 @@ ve en el detalle del producto.
 
 ---
 
-## FASE 6 — Buscador y detalle de producto
+## FASE 6 — Buscador y detalle de producto ✅ COMPLETADA
 
-- Buscador por nombre / código.
-- Pantalla de detalle con la **línea de tiempo** de cambios de cantidad del
-  producto.
+- [x] Buscador por código/descripción/marca con indicador de carga.
+- [x] **Orden configurable**: marca, descripción, stock ↑, stock ↓.
+- [x] **Filtros rápidos de stock**: todos · stock bajo · agotados (indicadores
+      clickeables) que se combinan con marca y búsqueda.
+- [x] Paginación que preserva todos los filtros en la URL.
+- [x] Detalle de producto con **stepper para ajustar** y la línea de tiempo que
+      se actualiza al instante.
 
-**DoD:** se encuentra un producto al instante y se ve su historial completo.
+**DoD:** verificado end-to-end — orden por stock, filtros de estado, búsqueda y
+ajuste desde el detalle con historial en vivo.
 
 ---
 

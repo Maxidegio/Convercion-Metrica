@@ -4,8 +4,9 @@ import { ArrowLeft } from "lucide-react";
 import { AppHeader } from "@/components/layout/app-header";
 import { auth } from "@/lib/auth";
 import { getProductWithHistory } from "@/features/products/queries";
-import { BrandPill, CodeChip, StockBadge } from "@/components/ui/badges";
+import { BrandPill, CodeChip } from "@/components/ui/badges";
 import { HistoryTimeline } from "@/features/products/components/history-timeline";
+import { DetailStepper } from "@/features/products/components/detail-stepper";
 
 export default async function ProductDetailPage({
   params,
@@ -49,9 +50,9 @@ export default async function ProductDetailPage({
                 <CodeChip value={product.factoryCode} variant="fab" />
               </div>
             </div>
-            <div className="flex flex-col items-end gap-1">
+            <div className="flex flex-col items-end gap-2">
               <span className="text-xs font-bold uppercase tracking-wider text-muted">Stock</span>
-              <StockBadge quantity={product.quantity} />
+              <DetailStepper productId={product.id} initial={product.quantity} />
             </div>
           </div>
         </div>

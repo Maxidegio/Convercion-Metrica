@@ -6,15 +6,27 @@ import {
   getProducts,
   getStockSummary,
   getBrandsWithCounts,
+  type SortOption,
+  type StockStatus,
 } from "@/features/products/queries";
+import type { ListParams } from "@/features/products/href";
 import { BrandFilter } from "@/features/products/components/brand-filter";
-import { SearchBar } from "@/features/products/components/search-bar";
+import { ProductToolbar } from "@/features/products/components/product-toolbar";
 import { ProductTable } from "@/features/products/components/product-table";
 import { Pagination } from "@/features/products/components/pagination";
 import { StockSummary } from "@/features/products/components/stock-summary";
 import { ProductCreateButton } from "@/features/products/components/product-create-button";
 
-type SearchParams = { q?: string; brand?: string; page?: string };
+type SearchParams = {
+  q?: string;
+  brand?: string;
+  page?: string;
+  sort?: string;
+  stock?: string;
+};
+
+const SORTS = new Set<SortOption>(["brand", "name", "stock_asc", "stock_desc"]);
+const STOCKS = new Set<StockStatus>(["all", "low", "out"]);
 
 export default async function ProductosPage({
   searchParams,
@@ -28,7 +40,11 @@ export default async function ProductosPage({
   const q = sp.q?.trim() || undefined;
   const brand = sp.brand || undefined;
   const page = sp.page ? Math.max(1, parseInt(sp.page, 10) || 1) : 1;
-  const filters = { q, brand, page };
+  const sort = (sp.sort && SORTS.has(sp.sort as SortOption) ? sp.sort : "brand") as SortOption;
+  const stock = (sp.stock && STOCKS.has(sp.stock as StockStatus) ? sp.stock : "all") as StockStatus;
+
+  const filters = { q, brand, page, sort, stock };
+  const base: ListParams = { q, brand, sort, stock };
 
   const [list, summary, brands, globalTotal] = await Promise.all([
     getProducts(filters),
@@ -51,32 +67,23 @@ export default async function ProductosPage({
           <ProductCreateButton />
         </div>
 
-        <StockSummary summary={summary} />
+        <StockSummary summary={summary} base={base} />
 
         <div className="mt-6 flex flex-col gap-5 lg:flex-row">
           <aside className="lg:w-56 lg:flex-none">
-            <BrandFilter
-              brands={brands}
-              activeBrand={brand}
-              q={q}
-              totalProducts={globalTotal}
-            />
+            <BrandFilter brands={brands} base={base} totalProducts={globalTotal} />
           </aside>
 
           <div className="min-w-0 flex-1">
-            <div className="mb-4 flex items-center gap-3">
-              <SearchBar />
-              <span className="hidden whitespace-nowrap rounded-control border border-border bg-card px-3 py-2.5 text-sm font-bold text-ink sm:block">
-                <span className="text-gold-600">{list.total.toLocaleString("es-AR")}</span>{" "}
-                productos
-              </span>
+            <div className="mb-4">
+              <ProductToolbar total={list.total} />
             </div>
 
             <div className="overflow-hidden rounded-card border border-border bg-card shadow-card">
-              <ProductTable items={list.items} grouped={!brand} />
+              <ProductTable items={list.items} grouped={list.grouped} />
             </div>
 
-            <Pagination page={list.page} pageCount={list.pageCount} q={q} brand={brand} />
+            <Pagination page={list.page} pageCount={list.pageCount} base={base} />
           </div>
         </div>
       </main>

@@ -1,34 +1,25 @@
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { productsHref, type ListParams } from "@/features/products/href";
 
 type BrandCount = { brand: string; count: number };
 
-/** Panel lateral de marcas. Conserva el término de búsqueda al filtrar. */
+/** Panel lateral de marcas. Conserva búsqueda, orden y filtro de stock. */
 export function BrandFilter({
   brands,
-  activeBrand,
-  q,
+  base,
   totalProducts,
 }: {
   brands: BrandCount[];
-  activeBrand?: string;
-  q?: string;
+  base: ListParams;
   totalProducts: number;
 }) {
-  const href = (brand?: string) => {
-    const params = new URLSearchParams();
-    if (q) params.set("q", q);
-    if (brand) params.set("brand", brand);
-    const qs = params.toString();
-    return `/productos${qs ? `?${qs}` : ""}`;
-  };
-
   const item = (label: string, count: number, brand?: string) => {
-    const active = brand ? activeBrand === brand : !activeBrand;
+    const active = brand ? base.brand === brand : !base.brand;
     return (
       <Link
         key={label}
-        href={href(brand)}
+        href={productsHref(base, { brand, page: undefined })}
         className={cn(
           "flex items-center justify-between rounded-[11px] px-3 py-2 text-sm font-semibold transition",
           active ? "bg-gold text-[#0B0D12]" : "text-ink hover:bg-surface",
