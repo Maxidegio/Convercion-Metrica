@@ -1,52 +1,69 @@
-import { Logo } from "@/components/ui/logo";
-import { StepperDemo } from "@/components/stepper-demo";
-import { Check } from "lucide-react";
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import { Package, Users, ArrowRight } from "lucide-react";
+import { AppHeader } from "@/components/layout/app-header";
+import { auth } from "@/lib/auth";
 
-/**
- * Página de estado de la FASE 2.
- * Verifica que el stack (Next + Tailwind + tokens MAFERSA + componentes)
- * está montado. Se reemplaza por el login/dashboard en las próximas fases.
- */
-const done = [
-  "Next.js 15 (App Router) + React 19 + TypeScript estricto",
-  "TailwindCSS con el sistema de diseño MAFERSA (navy + dorado)",
-  "Prisma + PostgreSQL — 3 tablas + tablas de Auth.js",
-  "Seed que importa el catálogo real (data/products.json)",
-  "Componente QuantityStepper (design system)",
-];
+export default async function HomePage() {
+  const session = await auth();
+  if (!session?.user) redirect("/login");
+  const user = session.user;
+  const isAdmin = user.role === "ADMIN";
 
-export default function Home() {
   return (
-    <main className="mx-auto flex min-h-screen max-w-2xl flex-col items-center justify-center gap-8 px-6 py-16">
-      <Logo />
-
-      <div className="w-full rounded-card border border-border bg-card p-8 shadow-card">
-        <p className="text-xs font-bold uppercase tracking-[0.3em] text-muted">
+    <div className="min-h-screen">
+      <AppHeader />
+      <main className="mx-auto max-w-4xl px-6 py-10">
+        <p className="text-xs font-bold uppercase tracking-[0.24em] text-muted">
           Control de Stock
         </p>
-        <h1 className="mt-2 text-2xl font-black text-ink">FASE 2 · Proyecto configurado</h1>
+        <h1 className="mt-1 text-3xl font-black text-ink">Hola, {user?.name}</h1>
         <p className="mt-1 text-sm text-muted">
-          El esqueleto técnico está montado. Próxima fase: autenticación.
+          {isAdmin ? "Administrador" : "Empleado"} · sesión iniciada
         </p>
 
-        <ul className="mt-6 flex flex-col gap-2.5">
-          {done.map((item) => (
-            <li key={item} className="flex items-start gap-2.5 text-sm text-ink">
-              <span className="mt-0.5 grid h-4 w-4 flex-none place-items-center rounded-full bg-ok/15 text-ok">
-                <Check size={11} strokeWidth={3.5} />
-              </span>
-              {item}
-            </li>
-          ))}
-        </ul>
+        <div className="mt-8 grid gap-4 sm:grid-cols-2">
+          <Link
+            href="/"
+            className="group rounded-card border border-border bg-card p-6 shadow-card transition hover:border-gold"
+          >
+            <span className="grid h-11 w-11 place-items-center rounded-control bg-gold/15 text-gold-600">
+              <Package size={22} />
+            </span>
+            <h2 className="mt-4 flex items-center gap-1 text-lg font-extrabold text-ink">
+              Productos
+              <ArrowRight
+                size={17}
+                className="opacity-0 transition group-hover:translate-x-0.5 group-hover:opacity-100"
+              />
+            </h2>
+            <p className="mt-1 text-sm text-muted">
+              Ver el catálogo y ajustar el stock. (Próxima fase)
+            </p>
+          </Link>
 
-        <div className="mt-8 rounded-control border border-border bg-surface p-4">
-          <p className="mb-3 text-xs font-bold uppercase tracking-wider text-muted">
-            Control de stock (demo)
-          </p>
-          <StepperDemo />
+          {isAdmin && (
+            <Link
+              href="/usuarios"
+              className="group rounded-card border border-border bg-card p-6 shadow-card transition hover:border-gold"
+            >
+              <span className="grid h-11 w-11 place-items-center rounded-control bg-gold/15 text-gold-600">
+                <Users size={22} />
+              </span>
+              <h2 className="mt-4 flex items-center gap-1 text-lg font-extrabold text-ink">
+                Usuarios
+                <ArrowRight
+                  size={17}
+                  className="opacity-0 transition group-hover:translate-x-0.5 group-hover:opacity-100"
+                />
+              </h2>
+              <p className="mt-1 text-sm text-muted">
+                Crear, editar y dar de baja empleados.
+              </p>
+            </Link>
+          )}
         </div>
-      </div>
-    </main>
+      </main>
+    </div>
   );
 }

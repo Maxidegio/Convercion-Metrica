@@ -1,17 +1,27 @@
 /**
  * Seed de la base de datos.
- * 1. Crea (o actualiza) un usuario administrador inicial.
+ * 1. Crea (o actualiza) los usuarios iniciales.
+ *    Login = username (minúsculas sin acento). Contraseña = el nombre.
+ *    Máximo es el administrador; el resto, empleados.
  * 2. Importa el catálogo real de MAFERSA desde data/products.json
  *    (3.536 productos, sin precios, con stock inicial en 0).
  *
  * Ejecutar con: npm run db:seed
  */
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, Role } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
 const prisma = new PrismaClient();
+
+const USERS: { username: string; name: string; password: string; role: Role }[] = [
+  { username: "sandra", name: "Sandra", password: "Sandra", role: Role.EMPLOYEE },
+  { username: "alejandra", name: "Alejandra", password: "Alejandra", role: Role.EMPLOYEE },
+  { username: "german", name: "Germán", password: "Germán", role: Role.EMPLOYEE },
+  { username: "julio", name: "Julio", password: "Julio", role: Role.EMPLOYEE },
+  { username: "maximo", name: "Máximo", password: "Máximo", role: Role.ADMIN },
+];
 
 type SeedProduct = {
   brand: string | null;
@@ -21,18 +31,16 @@ type SeedProduct = {
   quantity: number;
 };
 
-async function seedAdmin() {
-  const email = process.env.SEED_ADMIN_EMAIL ?? "admin@mafersa";
-  const password = process.env.SEED_ADMIN_PASSWORD ?? "mafersa2026";
-  const name = process.env.SEED_ADMIN_NAME ?? "Administrador";
-
-  const passwordHash = await bcrypt.hash(password, 10);
-  await prisma.user.upsert({
-    where: { email },
-    update: {},
-    create: { email, name, passwordHash },
-  });
-  console.log(`✓ Usuario admin listo: ${email}`);
+async function seedUsers() {
+  for (const u of USERS) {
+    const passwordHash = await bcrypt.hash(u.password, 10);
+    await prisma.user.upsert({
+      where: { username: u.username },
+      update: { name: u.name, role: u.role },
+      create: { username: u.username, name: u.name, role: u.role, passwordHash },
+    });
+  }
+  console.log(`✓ Usuarios listos: ${USERS.map((u) => u.username).join(", ")}`);
 }
 
 async function seedProducts() {
@@ -43,8 +51,6 @@ async function seedProducts() {
   let skipped = 0;
 
   for (const p of products) {
-    // El código interno es la clave de negocio. Si falta, se inserta igual
-    // (producto sin código interno), pero no se puede deduplicar por él.
     if (p.internalCode) {
       const existing = await prisma.product.findUnique({
         where: { internalCode: p.internalCode },
@@ -70,7 +76,7 @@ async function seedProducts() {
 
 async function main() {
   console.log("Sembrando base de datos MAFERSA…");
-  await seedAdmin();
+  await seedUsers();
   await seedProducts();
 }
 

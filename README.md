@@ -76,8 +76,23 @@ No se avanza a la siguiente fase sin terminar la anterior.
 
 1. **FASE 1 — Arquitectura** ✅ aprobada
 2. **FASE 2 — Configuración del proyecto** ✅ completada
-3. FASE 3 — Login ← *próxima*
-4. FASE 4 — Lista de productos (CRUD)
+3. **FASE 3 — Login + Usuarios** ✅ completada
+4. FASE 4 — Lista de productos (CRUD) ← *próxima*
 5. FASE 5 — Ajuste de cantidad + historial
 6. FASE 6 — Buscador y detalle de producto
 7. FASE 7 — Optimización y deployment
+
+### Usuarios iniciales (seed)
+
+Login con **nombre de usuario** (minúsculas, sin acento). La contraseña inicial
+es el **nombre de la persona** — conviene cambiarla desde la gestión de usuarios.
+
+| Usuario | Rol | Contraseña inicial |
+|---------|-----|--------------------|
+| `maximo` | Administrador | `Máximo` |
+| `sandra` | Empleado | `Sandra` |
+| `alejandra` | Empleado | `Alejandra` |
+| `german` | Empleado | `Germán` |
+| `julio` | Empleado | `Julio` |
+
+Solo el administrador (Máximo) puede crear, editar y dar de baja usuarios.

@@ -38,14 +38,20 @@ aplican al conectar una PostgreSQL vía `DATABASE_URL`.
 
 ---
 
-## FASE 3 — Login
+## FASE 3 — Login + Usuarios ✅ COMPLETADA
 
-- Auth.js con email + contraseña, hashing, sesión y logout.
-- Pantalla de Login.
-- Registro de **último acceso**.
-- Middleware que protege las rutas privadas.
+- [x] Auth.js (NextAuth v5) con **usuario + contraseña**, hash bcrypt, sesión JWT y logout.
+- [x] Rol `ADMIN` / `EMPLOYEE` (Máximo = administrador).
+- [x] Pantalla de Login con la estética MAFERSA.
+- [x] Registro de **último acceso** (`lastLoginAt`).
+- [x] Middleware + guard por página que protegen las rutas privadas.
+- [x] **Gestión de usuarios (solo admin):** crear, editar (nombre/rol/contraseña)
+      y dar de baja empleados.
+- [x] Seed de los 5 usuarios iniciales.
 
-**DoD:** un empleado inicia y cierra sesión; sin sesión no se entra.
+**DoD:** verificado end-to-end contra PostgreSQL — login admin/empleado, clave
+incorrecta rechazada, rutas protegidas, `/usuarios` solo admin, último acceso
+registrado.
 
 ---
 
