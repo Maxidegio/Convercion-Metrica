@@ -1,141 +1,94 @@
-# 07 · Roadmap por fases
+# 07 · Roadmap por fases (versión simplificada)
 
-El desarrollo avanza en **9 fases**. Regla de oro: **no se avanza a la siguiente
-fase sin terminar completamente la anterior**, y cada decisión técnica se explica
-antes de implementarla. Cada fase tiene una **definición de terminado** (DoD)
-que debe cumplirse y aprobarse.
+Con el alcance reducido, el desarrollo se ordena en menos fases. Regla: **no se
+avanza a la siguiente sin terminar la anterior**, y cada decisión técnica se
+explica antes de implementarla.
 
 ## FASE 1 — Arquitectura ✅ (entregada, pendiente de aprobación)
 
-**Objetivo:** diseñar todo el sistema como software comercial antes de escribir
-código de aplicación.
+Diseño del sistema mínimo: usuarios, productos y cambios de cantidad.
+- [x] Visión general y alcance (`01-overview.md`)
+- [x] Stack y justificación (`02-tech-stack.md`)
+- [x] Modelo de datos: 3 tablas (`03-data-model.md`)
+- [x] Diagrama ER (`04-er-diagram.md`)
+- [x] Estructura de carpetas (`05-folder-structure.md`)
+- [x] Ajuste de cantidad — flechas + input (`06-quantity-stepper.md`)
+- [x] Roadmap (este documento)
 
-**Entregables:**
-- [x] Visión general y principios (`01-overview.md`)
-- [x] Stack tecnológico y justificación, incl. Next API vs NestJS (`02-tech-stack.md`)
-- [x] Modelo de datos completo: tablas, FKs, índices, normalización (`03-data-model.md`)
-- [x] Diagrama entidad-relación (`04-er-diagram.md`)
-- [x] Estructura de carpetas para años (`05-folder-structure.md`)
-- [x] Seguridad y RBAC (`06-security-rbac.md`)
-- [x] Roadmap por fases (este documento)
-
-**DoD:** documentación revisada y **aprobada por el responsable**. → *Esperando tu OK.*
+**DoD:** aprobación del diseño. → *Esperando tu OK.*
 
 ---
 
 ## FASE 2 — Configuración del proyecto
 
-**Objetivo:** dejar el esqueleto técnico funcionando en local y en CI.
+- Next.js (App Router) + TypeScript estricto + TailwindCSS.
+- ESLint, Prettier.
+- Prisma con las 3 tablas + primera migración + `CHECK (quantity >= 0)`.
+- Seed: un usuario demo y algunos productos de ejemplo.
+- Design system base: tema claro/oscuro, primitivas `ui/` (incl. `QuantityStepper`).
+- CI: lint + typecheck + test.
 
-**Alcance:**
-- Inicializar Next.js (App Router) + TypeScript estricto + TailwindCSS.
-- ESLint, Prettier, `import/no-restricted-paths` (regla de dependencias).
-- Prisma: `schema.prisma` final del modelo de FASE 1 + primera migración.
-- Cliente Prisma singleton, config de entorno (`.env.example`).
-- Estructura de carpetas de `05-folder-structure.md` creada y con barrels.
-- Seed inicial: roles, permisos, unidades, un almacén y ubicación demo.
-- Design system base: tokens de Tailwind, tema claro/oscuro, primitivas `ui/`.
-- CI (GitHub Actions): lint + typecheck + test.
-
-**DoD:** `dev` levanta, migración aplica, seed corre, CI en verde.
+**DoD:** `dev` levanta, migración y seed corren, CI en verde.
 
 ---
 
-## FASE 3 — Autenticación
+## FASE 3 — Login
 
-**Objetivo:** acceso seguro por empleado.
+- Auth.js con email + contraseña, hashing, sesión y logout.
+- Pantalla de Login.
+- Registro de **último acceso**.
+- Middleware que protege las rutas privadas.
 
-**Alcance:**
-- Auth.js con credenciales, hashing de contraseñas, sesiones y logout.
-- Pantalla de **Login** y **recuperación de contraseña** (token de un solo uso).
-- Registro de **último acceso** y evento en `audit_logs`.
-- Middleware de protección de rutas + guard de permisos server-side.
-- Hook `usePermissions()` y matriz RBAC de `06-security-rbac.md`.
-
-**DoD:** un usuario puede iniciar/cerrar sesión, recuperar contraseña, y las
-rutas privadas están protegidas por rol.
+**DoD:** un empleado inicia y cierra sesión; sin sesión no se entra.
 
 ---
 
-## FASE 4 — Dashboard
+## FASE 4 — Lista de productos (CRUD)
 
-**Objetivo:** panel principal tras el login.
+- Pantalla principal: tabla de productos (códigos, nombre, cantidad).
+- Alta, edición y baja de productos.
+- Validación con Zod.
 
-**Alcance (según enunciado):** stock total, productos con poco stock,
-movimientos del día, últimos ingresos y egresos, gráficos, alertas e
-indicadores. Consultas agregadas eficientes; widgets reutilizables.
-
-**DoD:** dashboard responsive, con datos reales del seed, en modo claro/oscuro.
+**DoD:** se pueden administrar productos desde la interfaz.
 
 ---
 
-## FASE 5 — CRUD de Productos
+## FASE 5 — Ajuste de cantidad + historial ★
 
-**Objetivo:** gestión completa del catálogo.
+- Componente `QuantityStepper` (flechas −/+ y campo editable).
+- Endpoint de ajuste en **transacción** (producto + `quantity_changes`).
+- **UI optimista** con reversión ante error.
+- Registro automático de cada cambio (quién, cuándo, antes → después).
 
-**Alcance:** alta/edición/baja lógica de productos con todos los campos del
-enunciado; categorías (jerárquicas), marcas, proveedores, unidades, imágenes;
-**buscador instantáneo** y filtros (nombre, SKU, categoría, proveedor,
-ubicación, estado); tabla con paginación server-side.
-
-**DoD:** se pueden administrar productos y buscarlos/filtrarlos con fluidez.
-
----
-
-## FASE 6 — Movimientos
-
-**Objetivo:** el corazón del sistema.
-
-**Alcance:** registrar Ingreso, Salida, Transferencia y Ajuste en
-**transacciones atómicas**; actualización automática de `stock_levels` y
-agregados; `stockBefore/After`; ledger inmutable; **timeline/historial por
-producto**; disparo de notificaciones (stock bajo/agotado).
-
-**DoD:** todo movimiento actualiza el stock correctamente, queda registrado y es
-imborrable; el historial por producto es completo.
+**DoD:** ajustar cantidad funciona con flechas y escribiendo, y cada cambio
+queda guardado e imborrable.
 
 ---
 
-## FASE 7 — Reportes
+## FASE 6 — Buscador y detalle de producto
 
-**Objetivo:** salida de información.
+- Buscador por nombre / código.
+- Pantalla de detalle con la **línea de tiempo** de cambios de cantidad del
+  producto.
 
-**Alcance:** reportes en **PDF y Excel** de inventario completo, movimientos,
-ingresos, salidas, productos críticos e historial. Respetando el permiso
-`report:export`.
-
-**DoD:** los reportes se generan y descargan correctamente con datos reales.
+**DoD:** se encuentra un producto al instante y se ve su historial completo.
 
 ---
 
-## FASE 8 — Optimización
+## FASE 7 — Optimización y deployment
 
-**Objetivo:** rendimiento y robustez.
+- Índices y consultas revisadas, paginación en la lista.
+- Pulido de UX, responsive, modo oscuro.
+- Deploy en Vercel + PostgreSQL gestionado, variables de entorno, backups.
 
-**Alcance:** revisión de índices y consultas (N+1), caching donde aporte,
-paginación/streaming, pruebas de carga básicas, cobertura de tests del dominio,
-accesibilidad y pulido de UX.
-
-**DoD:** métricas de rendimiento aceptables y suite de tests estable.
-
----
-
-## FASE 9 — Deployment
-
-**Objetivo:** puesta en producción en Vercel.
-
-**Alcance:** PostgreSQL gestionado con pooling, variables de entorno y secretos,
-migraciones en el pipeline, dominios, backups, monitoreo/logging y checklist de
-seguridad final.
-
-**DoD:** sistema desplegado, estable y accesible por los empleados.
+**DoD:** sistema desplegado, estable y usable por los empleados.
 
 ---
 
 ## Principios que rigen todas las fases
 
-1. **Terminar antes de avanzar.** Nada de fases a medias.
-2. **Explicar antes de implementar.** Cada decisión técnica se justifica.
-3. **Código limpio y desacoplado.** SOLID + Clean Architecture, documentado.
-4. **Trazabilidad primero.** Los movimientos nunca se borran.
-5. **Preparado para crecer.** Cada elección se evalúa a años, no a semanas.
+1. Terminar una fase antes de avanzar.
+2. Explicar cada decisión técnica antes de implementarla.
+3. Código limpio y desacoplado.
+4. El historial de cantidades nunca se borra.
+5. Simple hoy, con lugar para crecer si el negocio lo pide.

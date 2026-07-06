@@ -1,156 +1,93 @@
-# 01 · Visión general de la arquitectura
+# 01 · Visión general (versión simplificada)
 
-## 1.1 Propósito del sistema
+## 1.1 Qué hace el sistema
 
-Convercion Métrica es una **plataforma web privada de control de inventario**
-para uso interno de los empleados de la empresa. Su función central es mantener
-en todo momento una imagen exacta y auditable del stock, garantizando que:
+Convercion Métrica es una plataforma web privada para **llevar el stock de los
+productos** de la empresa, con el mínimo de piezas posible:
 
-- Cada usuario accede con credenciales propias y un rol asignado.
-- **Todo movimiento de stock queda registrado y nunca se elimina.**
-- El inventario se recalcula automáticamente en cada operación.
-- Existe una línea de tiempo (historial) completa por producto.
-- El sistema es ordenado, rápido, escalable y mantenible durante años.
+- Cada empleado **inicia sesión** con su usuario.
+- Ve una **lista de productos** con sus códigos, su nombre y su **cantidad**.
+- **Ajusta la cantidad** de cada producto: con flechas **−/+** (de a 1 unidad) o
+  escribiendo el número directamente.
+- Cada cambio de cantidad se **registra automáticamente** (quién, cuándo,
+  antes → después).
 
-## 1.2 Principios rectores
+Nada más. Sin almacenes, sin ubicaciones, sin categorías, sin proveedores, sin
+reservas. Si el negocio lo pide en el futuro, la arquitectura permite crecer;
+hoy se mantiene deliberadamente simple.
 
-Estos principios condicionan todas las decisiones posteriores:
-
-1. **El movimiento es la fuente de verdad (ledger inmutable).**
-   El stock no es un número que se "edita"; es el resultado de sumar/restar
-   movimientos. Igual que un libro contable: no se borra un asiento, se agrega
-   uno de corrección. Esto da trazabilidad total y hace el sistema auditable.
-
-2. **Clean Architecture / separación de capas.**
-   La lógica de negocio (dominio) no conoce Next.js, ni Prisma, ni HTTP. Se
-   comunica con el exterior mediante *puertos* (interfaces). Esto permite
-   cambiar el framework o la base de datos sin reescribir las reglas de negocio,
-   y hace el código testeable de forma aislada.
-
-3. **SOLID en la práctica.**
-   Responsabilidad única por módulo, dependencias hacia abstracciones,
-   inyección de dependencias en un único *composition root*.
-
-4. **Feature-first en el frontend.**
-   El código de UI se organiza por funcionalidad de negocio (productos,
-   movimientos, dashboard), no por tipo de archivo. Cada feature es un módulo
-   cohesivo y desacoplado.
-
-5. **Seguridad por defecto.**
-   Autorización verificada en el servidor en cada operación (nunca solo en la
-   UI). RBAC granular. Auditoría de accesos y acciones sensibles.
-
-6. **Rendimiento medible.**
-   Índices diseñados desde el modelo de datos, paginación en todas las listas,
-   consultas agregadas para el dashboard, cache donde aporta.
-
-## 1.3 Alcance funcional (módulos)
+## 1.2 Los tres conceptos del sistema
 
 ```
-┌──────────────────────────────────────────────────────────────┐
-│                    CONVERCION MÉTRICA (WMS)                    │
-├──────────────┬──────────────┬───────────────┬────────────────┤
-│  Identidad   │   Catálogo   │   Inventario  │   Observabilidad│
-│  & Accesos   │              │   & Movimien. │                 │
-├──────────────┼──────────────┼───────────────┼────────────────┤
-│ · Login      │ · Productos  │ · Niveles de  │ · Dashboard     │
-│ · Recuperar  │ · Categorías │   stock por   │ · Reportes      │
-│   contraseña │ · Marcas     │   ubicación   │   (PDF/Excel)   │
-│ · Sesiones   │ · Proveedores│ · Ingresos    │ · Notificaciones│
-│ · Roles y    │ · Unidades   │ · Salidas     │   y alertas     │
-│   permisos   │ · Almacenes  │ · Transfer.   │ · Historial /   │
-│ · Auditoría  │ · Ubicaciones│ · Ajustes     │   timeline      │
-│ · Último     │              │ · Reservas    │ · Búsqueda y    │
-│   acceso     │              │               │   filtros       │
-└──────────────┴──────────────┴───────────────┴────────────────┘
+┌───────────────┐        ┌──────────────────┐        ┌────────────────────┐
+│    USUARIO    │        │     PRODUCTO     │        │  CAMBIO DE CANTIDAD │
+│  (empleado)   │        │                  │        │     (historial)     │
+├───────────────┤        ├──────────────────┤        ├────────────────────┤
+│ · email       │        │ · códigos        │        │ · antes             │
+│ · contraseña  │        │ · nombre         │        │ · después           │
+│ · último      │  hace  │ · cantidad ◄─────┼─registra─ · diferencia (±)   │
+│   acceso      │───────►│                  │        │ · fecha y hora      │
+└───────────────┘        └──────────────────┘        │ · usuario           │
+                                                      └────────────────────┘
 ```
 
-## 1.4 Diagrama de contexto (C4 nivel 1)
+Un **usuario** ajusta la **cantidad** de un **producto**, y ese ajuste genera un
+**cambio de cantidad** (el historial). Esa es toda la lógica.
+
+## 1.3 Flujo principal: ajustar cantidad
 
 ```mermaid
-graph TB
-    subgraph Usuarios
-        ADM[Administrador]
-        SUP[Supervisor]
-        EMP[Empleado]
-    end
+sequenceDiagram
+    participant U as Empleado
+    participant UI as Lista de productos
+    participant API as Route Handler
+    participant DB as PostgreSQL
 
-    subgraph "Convercion Métrica (Next.js en Vercel)"
-        WEB[Frontend<br/>React + Tailwind]
-        API[Route Handlers<br/>Clean Architecture]
-        WEB --> API
-    end
-
-    DB[(PostgreSQL)]
-    MAIL[Servicio de Email<br/>recuperación de contraseña / alertas]
-    FILES[Almacenamiento de imágenes<br/>Vercel Blob / S3]
-
-    ADM & SUP & EMP -->|HTTPS| WEB
-    API -->|Prisma| DB
-    API --> MAIL
-    API --> FILES
+    U->>UI: Click en "+" (o escribe 42)
+    UI-->>U: La cantidad sube al instante (UI optimista)
+    UI->>API: PATCH /api/products/:id/quantity { quantity }
+    API->>DB: Lee cantidad actual (before)
+    API->>DB: Transacción: actualiza producto + inserta cambio
+    DB-->>API: OK (before, after, delta)
+    API-->>UI: Confirmación
+    Note over API,DB: Si falla, la UI revierte al valor anterior
 ```
 
-## 1.5 Vista de capas (Clean Architecture)
+Puntos clave:
 
-Las dependencias apuntan siempre **hacia adentro**. El dominio no depende de
-nada externo.
+- La actualización del producto y el registro del historial ocurren en **una
+  sola transacción**: o pasan las dos cosas, o ninguna. Nunca queda un cambio de
+  cantidad sin su registro, ni al revés.
+- El servidor calcula `before`, `after` y `delta` para que el historial sea
+  confiable (no se confía en lo que dice el cliente).
+- La UI es **optimista**: la cantidad cambia en pantalla al instante y, si el
+  servidor falla, se revierte. Detalle en `06-quantity-stepper.md`.
 
-```
-        ┌─────────────────────────────────────────────┐
-        │  PRESENTACIÓN (Next App Router)               │
-        │  Páginas, componentes, Route Handlers (API)   │
-        │  → Traduce HTTP ⇄ casos de uso                │
-        └───────────────────┬───────────────────────────┘
-                            │ depende de ↓
-        ┌───────────────────▼───────────────────────────┐
-        │  APLICACIÓN (casos de uso)                     │
-        │  Orquesta el dominio. Define PUERTOS (interf.) │
-        │  Ej: RegistrarMovimiento, CrearProducto        │
-        └───────────────────┬───────────────────────────┘
-                            │ depende de ↓
-        ┌───────────────────▼───────────────────────────┐
-        │  DOMINIO (núcleo, sin frameworks)              │
-        │  Entidades, value objects, reglas de negocio   │
-        │  Ej: Stock, Movimiento, invariantes de stock   │
-        └────────────────────────────────────────────────┘
-                            ▲ implementa puertos
-        ┌───────────────────┴───────────────────────────┐
-        │  INFRAESTRUCTURA                               │
-        │  Repositorios Prisma, email, storage, logger   │
-        │  → Adapta el mundo externo a los puertos       │
-        └────────────────────────────────────────────────┘
-```
+## 1.4 Principios que se mantienen
 
-**Ejemplo concreto del flujo "registrar un ingreso":**
+Aunque el sistema es chico, conserva las buenas prácticas que permiten crecer:
 
-1. El Route Handler `POST /api/movements` recibe la petición, valida el
-   esquema (Zod) y verifica permisos.
-2. Invoca el caso de uso `RegisterMovementUseCase` pasándole datos ya validados.
-3. El caso de uso carga el `Product`/`StockLevel` a través del *puerto*
-   `StockRepository`, aplica la regla de dominio (calcular `stockAfter`,
-   validar que no quede negativo salvo en ajustes), crea la entidad
-   `StockMovement` inmutable y persiste todo en una **transacción**.
-4. La implementación concreta del puerto (Prisma) hace el trabajo real contra
-   PostgreSQL.
-5. Se disparan efectos secundarios (evaluar alertas de stock bajo).
+1. **El historial no se borra.** Los cambios de cantidad son un registro
+   append-only (solo se agregan, nunca se editan ni eliminan).
+2. **Autorización en el servidor.** La sesión se valida en el backend, no solo
+   en la UI.
+3. **Validación en el borde.** Todo dato que entra se valida (Zod) antes de
+   tocar la base de datos.
+4. **Código desacoplado.** La lógica de negocio (ajustar cantidad y registrar el
+   cambio) vive separada del framework, para poder testearla y cambiarla sin
+   dolor.
+5. **Tipado extremo a extremo.** TypeScript + Prisma: si cambia una columna, el
+   compilador avisa qué se rompe.
 
-El dominio (paso 3) no sabe que existe HTTP, Next o Prisma. Por eso es testeable
-y portable.
+## 1.5 Alcance explícito
 
-## 1.6 Atributos de calidad priorizados
+| Incluido en esta versión | Fuera de alcance (por ahora) |
+|--------------------------|------------------------------|
+| Login por empleado | Roles / permisos granulares |
+| Productos con códigos, nombre y cantidad | Categorías, marcas, proveedores, unidades |
+| Ajuste de cantidad (flechas + input) | Almacenes, ubicaciones, reservas |
+| Historial de cambios de cantidad | Transferencias entre depósitos |
+| Buscador básico de productos | Reportes PDF/Excel, notificaciones |
 
-| Atributo        | Cómo se garantiza |
-|-----------------|-------------------|
-| **Trazabilidad**| Ledger inmutable de movimientos + tabla de auditoría |
-| **Consistencia**| Transacciones atómicas al mover stock; `stockBefore/After` |
-| **Rendimiento** | Índices dedicados, paginación, agregados para dashboard |
-| **Escalabilidad**| Modelo multi-almacén/ubicación; capas desacoplables |
-| **Mantenibilidad**| Clean Architecture, feature-first, TypeScript estricto |
-| **Seguridad**   | RBAC server-side, sesiones, hashing de contraseñas, auditoría |
-
-## 1.7 Decisiones que se documentan por separado
-
-- **Backend: Next Route Handlers vs NestJS** → ver `02-tech-stack.md`.
-- **Multi-almacén y stock por ubicación** → ver `03-data-model.md`.
-- **RBAC granular vs rol simple** → ver `06-security-rbac.md`.
+Estos "fuera de alcance" quedan documentados como posibles fases futuras, pero
+**no se construyen** hasta que se pidan.

@@ -1,65 +1,61 @@
-# Convercion Métrica — Sistema de Control de Inventario (WMS/ERP interno)
+# Convercion Métrica — Control simple de stock
 
-Plataforma web privada para el control interno de stock de la empresa. Cada
-empleado accede con su usuario, todos los movimientos quedan registrados de
-forma inmutable y el inventario se actualiza automáticamente.
+Plataforma web privada para llevar el stock de los productos de la empresa.
+Cada empleado entra con su usuario, ve la lista de productos y ajusta las
+cantidades. Cada cambio de cantidad queda registrado automáticamente.
 
-> **Estado actual: FASE 1 — Arquitectura.** Este repositorio contiene, por
-> ahora, únicamente el diseño del sistema. No se ha escrito código de aplicación.
-> El desarrollo avanza por fases y cada fase debe aprobarse antes de comenzar la
-> siguiente.
+> **Estado actual: FASE 1 — Arquitectura (versión simplificada).** Este
+> repositorio contiene por ahora solo el diseño. No hay código de aplicación.
+> El desarrollo avanza por fases y cada fase se aprueba antes de la siguiente.
 
-## Referencias funcionales
+## Filosofía: lo más simple posible
 
-La organización lógica se inspira en **SAP Warehouse Management**, **Odoo
-Inventory**, **Oracle NetSuite Inventory** y **Zoho Inventory**. No se copia
-ninguna interfaz; se replica la forma en que estos sistemas estructuran el
-dominio (productos, ubicaciones, movimientos como libro mayor inmutable,
-niveles de stock por ubicación, RBAC, auditoría).
+El sistema se reduce a **tres conceptos**:
 
-## Stack tecnológico (resumen)
+1. **Usuarios** — inicio de sesión por empleado (login simple, sin roles).
+2. **Productos** — sus códigos, su nombre y su **cantidad**.
+3. **Historial** — cada cambio de cantidad se guarda (quién, cuándo, antes → después).
+
+La interacción estrella es el **ajuste de cantidad**: flechas **−/+** que suman o
+restan de a **1 unidad**, y la posibilidad de **escribir** el número directo.
+
+## Stack tecnológico
 
 | Capa            | Tecnología                                  |
 |-----------------|---------------------------------------------|
 | Frontend        | Next.js (App Router) · React · TypeScript · TailwindCSS |
-| Backend         | Next.js Route Handlers + Clean Architecture interna |
-| Base de datos   | PostgreSQL                                  |
-| ORM             | Prisma                                      |
-| Autenticación   | Auth.js (NextAuth v5)                        |
-| Deployment      | Vercel                                      |
+| Backend         | Next.js Route Handlers                       |
+| Base de datos   | PostgreSQL                                   |
+| ORM             | Prisma                                       |
+| Autenticación   | Auth.js (NextAuth v5) — login simple         |
+| Deployment      | Vercel                                        |
 
-La justificación detallada de cada elección está en
-[`docs/architecture/02-tech-stack.md`](docs/architecture/02-tech-stack.md).
+Justificación en [`docs/architecture/02-tech-stack.md`](docs/architecture/02-tech-stack.md).
 
 ## Documentación de arquitectura (FASE 1)
 
 | Documento | Contenido |
 |-----------|-----------|
-| [01 · Visión general](docs/architecture/01-overview.md) | Objetivos, principios, alcance, diagrama de contexto |
-| [02 · Stack tecnológico](docs/architecture/02-tech-stack.md) | Elecciones y justificación (incl. Next API vs NestJS) |
-| [03 · Modelo de datos](docs/architecture/03-data-model.md) | Todas las tablas explicadas, índices, FKs, normalización |
+| [01 · Visión general](docs/architecture/01-overview.md) | Objetivos, alcance mínimo, cómo funciona |
+| [02 · Stack tecnológico](docs/architecture/02-tech-stack.md) | Elecciones y justificación |
+| [03 · Modelo de datos](docs/architecture/03-data-model.md) | 3 tablas explicadas + esquema Prisma |
 | [04 · Diagrama ER](docs/architecture/04-er-diagram.md) | Diagrama entidad-relación (Mermaid) |
-| [05 · Estructura de carpetas](docs/architecture/05-folder-structure.md) | Organización del proyecto para mantener por años |
-| [06 · Seguridad y RBAC](docs/architecture/06-security-rbac.md) | Roles, permisos, sesiones, auditoría |
-| [07 · Roadmap por fases](docs/architecture/07-roadmap-phases.md) | Fases 1 a 9, definición de "terminado" por fase |
+| [05 · Estructura de carpetas](docs/architecture/05-folder-structure.md) | Organización del proyecto |
+| [06 · Ajuste de cantidad (UX)](docs/architecture/06-quantity-stepper.md) | El control de flechas + input, y cómo se guarda |
+| [07 · Roadmap por fases](docs/architecture/07-roadmap-phases.md) | Fases de desarrollo |
+| [08 · Sistema de diseño](docs/architecture/08-design-system.md) | Estética MAFERSA: colores, tipografía, componentes |
+
+El catálogo real (3.536 productos de la lista MAFERSA) ya está extraído en
+[`data/`](data/README.md), listo para el seed.
 
 ## Flujo de desarrollo
 
-El proyecto avanza en 9 fases. **No se avanza a la siguiente fase sin terminar
-completamente la anterior.** Cada decisión técnica se explica antes de
-implementarse.
+No se avanza a la siguiente fase sin terminar la anterior.
 
 1. **FASE 1 — Arquitectura** ← *estás aquí*
 2. FASE 2 — Configuración del proyecto
-3. FASE 3 — Autenticación
-4. FASE 4 — Dashboard
-5. FASE 5 — CRUD de Productos
-6. FASE 6 — Movimientos
-7. FASE 7 — Reportes
-8. FASE 8 — Optimización
-9. FASE 9 — Deployment
-
----
-
-_Diseñado siguiendo principios SOLID, Clean Architecture y buenas prácticas de
-ingeniería de software, pensado para crecer durante años._
+3. FASE 3 — Login
+4. FASE 4 — Lista de productos (CRUD)
+5. FASE 5 — Ajuste de cantidad + historial
+6. FASE 6 — Buscador y detalle de producto
+7. FASE 7 — Optimización y deployment

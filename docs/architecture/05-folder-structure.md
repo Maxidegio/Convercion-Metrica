@@ -1,158 +1,97 @@
-# 05 · Estructura del proyecto
+# 05 · Estructura del proyecto (versión simplificada)
 
-Organización pensada para **mantenerse durante años**. Combina dos ideas:
-
-1. **Feature-first en la presentación** (frontend): el código se agrupa por
-   funcionalidad de negocio, no por tipo de archivo.
-2. **Clean Architecture en el backend** (`src/server`): el dominio y los casos
-   de uso no dependen de Next ni de Prisma.
-
-Cada carpeta pedida en el enunciado (`components`, `features`, `hooks`,
-`services`, `repositories`, `prisma`, `types`, `utils`, `middleware`, `api`,
-`app`) tiene su lugar explícito; la columna "Enunciado" lo indica.
+Estructura liviana, feature-first, fácil de mantener. Cada área de negocio
+(`auth`, `products`) es un módulo cohesivo. La lógica de negocio se separa de las
+rutas HTTP para poder testearla.
 
 ## 5.1 Árbol de carpetas
 
 ```
 convercion-metrica/
-├── prisma/                          # [prisma] Esquema, migraciones y seed
-│   ├── schema.prisma
+├── prisma/
+│   ├── schema.prisma            # Las 3 tablas + Auth.js
 │   ├── migrations/
-│   └── seed.ts
+│   └── seed.ts                  # Usuario demo + productos de ejemplo
 │
-├── public/                          # Estáticos (logo, favicon)
+├── public/
 │
 ├── src/
-│   ├── app/                         # [app / api] Next App Router (PRESENTACIÓN)
-│   │   ├── (auth)/                  #   Rutas públicas de acceso
-│   │   │   ├── login/page.tsx
-│   │   │   └── forgot-password/page.tsx
-│   │   ├── (dashboard)/             #   Rutas privadas (con layout de dashboard)
-│   │   │   ├── layout.tsx           #     sidebar + topbar + guard de sesión
-│   │   │   ├── page.tsx             #     Dashboard principal
-│   │   │   ├── products/
-│   │   │   ├── movements/
-│   │   │   ├── reports/
-│   │   │   ├── notifications/
-│   │   │   └── settings/            #     usuarios, roles, catálogos
-│   │   ├── api/                     # [api] Route Handlers = controladores delgados
+│   ├── app/                     # Next App Router
+│   │   ├── (auth)/
+│   │   │   └── login/page.tsx
+│   │   ├── (app)/               # Rutas privadas (requieren sesión)
+│   │   │   ├── layout.tsx       #   topbar + sesión
+│   │   │   ├── page.tsx         #   Lista de productos (pantalla principal)
+│   │   │   └── products/[id]/page.tsx   # Detalle + historial
+│   │   ├── api/                 # Route Handlers (controladores delgados)
 │   │   │   ├── auth/[...nextauth]/route.ts
-│   │   │   ├── products/route.ts
-│   │   │   ├── movements/route.ts
-│   │   │   └── reports/route.ts
-│   │   ├── layout.tsx               #   Root layout (providers, tema)
+│   │   │   └── products/
+│   │   │       ├── route.ts             # GET lista / POST crear
+│   │   │       └── [id]/
+│   │   │           ├── route.ts         # GET / PATCH / DELETE producto
+│   │   │           └── quantity/route.ts# PATCH ajustar cantidad
+│   │   ├── layout.tsx           # Root (providers, tema)
 │   │   └── globals.css
 │   │
-│   ├── components/                  # [components] UI reutilizable (design system)
-│   │   ├── ui/                      #   Primitivas: Button, Input, Dialog, Table…
-│   │   ├── layout/                  #   Sidebar, Topbar, PageHeader
-│   │   ├── charts/                  #   Envoltorios de gráficos
-│   │   └── data/                    #   DataTable, Pagination, EmptyState
+│   ├── components/              # UI reutilizable
+│   │   └── ui/                  #   Button, Input, Table, QuantityStepper…
 │   │
-│   ├── features/                    # [features] Slices verticales por dominio
+│   ├── features/               # Módulos por dominio
 │   │   ├── auth/
-│   │   │   ├── components/          #     LoginForm, ForgotPasswordForm
-│   │   │   ├── hooks/               #     useCurrentUser, usePermissions
-│   │   │   └── schemas.ts           #     Zod: login, reset
+│   │   │   ├── components/      #   LoginForm
+│   │   │   └── schemas.ts       #   Zod
+│   │   └── products/
+│   │       ├── components/      #   ProductTable, ProductForm, QuantityStepper
+│   │       ├── hooks/           #   useProducts, useAdjustQuantity (optimista)
+│   │       ├── api.ts           #   llamadas HTTP de la feature
+│   │       └── schemas.ts       #   Zod de producto y de ajuste
+│   │
+│   ├── server/                  # Lógica de negocio (sin Next dentro)
 │   │   ├── products/
-│   │   │   ├── components/          #     ProductTable, ProductForm, ProductCard
-│   │   │   ├── hooks/               #     useProducts, useProductFilters
-│   │   │   ├── api.ts               #     [services] cliente HTTP de la feature
-│   │   │   └── schemas.ts           #     Zod de producto
-│   │   ├── movements/
-│   │   ├── dashboard/               #     widgets, KPIs, alertas
-│   │   ├── reports/
-│   │   └── notifications/
+│   │   │   ├── product.service.ts   # crear/editar/borrar producto
+│   │   │   └── quantity.service.ts  # ajustar cantidad + registrar cambio (TX)
+│   │   └── auth/
+│   │       └── auth.service.ts      # login, último acceso
 │   │
-│   ├── server/                      # NÚCLEO BACKEND (Clean Architecture)
-│   │   ├── domain/                  #   Entidades, value objects, reglas puras
-│   │   │   ├── stock/               #     Stock, invariantes, cálculo de niveles
-│   │   │   ├── movement/            #     Movement (entidad inmutable)
-│   │   │   ├── product/
-│   │   │   └── errors/              #     Errores de dominio tipados
-│   │   ├── application/             #   Casos de uso + PUERTOS (interfaces)
-│   │   │   ├── use-cases/           #     RegisterMovement, CreateProduct…
-│   │   │   ├── ports/               #     Interfaces de repos y servicios
-│   │   │   └── dto/                 #     Contratos de entrada/salida
-│   │   ├── infrastructure/          #   Implementaciones concretas (adapters)
-│   │   │   ├── repositories/        # [repositories] Repos Prisma
-│   │   │   │   ├── product.repository.ts
-│   │   │   │   ├── stock.repository.ts
-│   │   │   │   └── movement.repository.ts
-│   │   │   ├── auth/                #     Adapter Auth.js
-│   │   │   ├── mail/                #     Servicio de email
-│   │   │   ├── storage/            #     Imágenes (Blob/S3)
-│   │   │   └── reports/             #     Generadores PDF/Excel
-│   │   └── container.ts             #   Composition root (inyección de deps)
+│   ├── lib/
+│   │   ├── prisma.ts            # Cliente Prisma singleton
+│   │   └── auth.ts             # Config Auth.js
 │   │
-│   ├── lib/                         # Cross-cutting técnico
-│   │   ├── prisma.ts                #   Cliente Prisma singleton
-│   │   ├── auth.ts                  #   Config de Auth.js
-│   │   └── logger.ts
-│   │
-│   ├── hooks/                       # [hooks] Hooks globales (useTheme, useToast)
-│   ├── services/                    # [services] Cliente API base (fetch wrapper)
-│   ├── types/                       # [types] Tipos compartidos y enums de UI
-│   ├── utils/                       # [utils] Formateadores, fechas, dinero
-│   ├── config/                      # Constantes, navegación, permisos por rol
-│   └── middleware.ts                # [middleware] Guard de rutas / sesión
+│   ├── hooks/                   # Hooks globales (useTheme, useToast)
+│   ├── types/                   # Tipos compartidos
+│   ├── utils/                   # Formateadores (fecha, número)
+│   └── middleware.ts            # Protege rutas privadas
 │
-├── tests/                           # Unit (domain), integración y E2E
-│   ├── unit/
-│   └── e2e/
-│
+├── tests/
 ├── .env.example
-├── .eslintrc / .prettierrc
 ├── tailwind.config.ts
 ├── tsconfig.json
 └── package.json
 ```
 
-## 5.2 Regla de dependencias (la más importante)
+## 5.2 Cómo fluye una acción (ajustar cantidad)
 
 ```
-app / features  ──►  server/application  ──►  server/domain
-      │                     ▲
-      └──► services         │ (implementa puertos)
-                     server/infrastructure ──► Prisma / Auth / Mail
+QuantityStepper (UI)
+   └─ useAdjustQuantity()  ── PATCH /api/products/:id/quantity
+                                    └─ route.ts  (valida Zod + sesión)
+                                          └─ quantity.service.ts
+                                                └─ prisma.$transaction(
+                                                     update product.quantity,
+                                                     create quantityChange )
 ```
 
-- **`server/domain` no importa NADA** de Next, Prisma, React ni de otras capas.
-  Solo TypeScript puro. Es el activo más valioso y el más estable.
-- **`server/application`** depende del dominio y define **puertos** (interfaces).
-  No sabe qué base de datos hay detrás.
-- **`server/infrastructure`** implementa esos puertos con Prisma, email, etc. Es
-  la única capa que toca detalles técnicos.
-- **`app/api` (Route Handlers)** son controladores delgados: validan (Zod),
-  autorizan (RBAC), llaman a un caso de uso y devuelven la respuesta. **Sin
-  lógica de negocio.**
-- **`features`** (frontend) consumen la API mediante `services`/`api.ts` y no
-  conocen la implementación del servidor.
+- **`route.ts`** es delgado: valida el input (Zod), confirma la sesión y llama al
+  servicio. Sin lógica de negocio adentro.
+- **`quantity.service.ts`** hace el trabajo real en una transacción: lee la
+  cantidad actual, calcula `before/after/delta`, actualiza el producto e inserta
+  el cambio. Es lo que se testea de forma aislada.
+- **`useAdjustQuantity`** maneja la **UI optimista**: actualiza en pantalla y
+  revierte si el servidor falla.
 
-Esta disciplina es lo que permite, años después, cambiar Prisma por otro ORM, o
-extraer el backend a NestJS, tocando solo `infrastructure`/`app`, nunca el
-dominio.
+## 5.3 Convenciones
 
-## 5.3 Por qué feature-first en el frontend
-
-Agrupar por funcionalidad (`features/products/*`) en lugar de por tipo
-(`components/`, `hooks/`, `services/` globales gigantes) hace que:
-
-- Todo lo de "productos" esté junto → onboarding y mantenimiento más rápidos.
-- Las features sean **desacoplables**: se puede borrar o extraer una sin romper
-  el resto.
-- `components/ui` quede reservado para piezas **verdaderamente** transversales
-  (el design system), evitando el cajón de sastre.
-
-## 5.4 Convenciones de código
-
-- **TypeScript estricto** (`strict: true`, sin `any` implícito).
-- **Nombres:** componentes `PascalCase`, hooks `useCamelCase`, casos de uso
-  `VerbNounUseCase`, repos `noun.repository.ts`.
-- **Validación en el borde:** todo input externo pasa por un esquema Zod antes
-  de entrar a un caso de uso.
-- **Errores de dominio tipados** (no `throw new Error("...")` genérico) que la
-  capa de presentación traduce a códigos HTTP.
-- **Barrels (`index.ts`)** por feature para imports limpios.
-- **Sin imports que crucen la regla de dependencias** (se puede vigilar con
-  ESLint `import/no-restricted-paths`).
+- **TypeScript estricto**, sin `any`.
+- **Validación en el borde** con Zod antes de cualquier escritura.
+- Componentes `PascalCase`, hooks `useCamelCase`, servicios `nombre.service.ts`.
+- La lógica de negocio no importa nada de `next/*` → testeable y portable.
