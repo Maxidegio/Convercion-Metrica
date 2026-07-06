@@ -4,7 +4,12 @@ Con el alcance reducido, el desarrollo se ordena en menos fases. Regla: **no se
 avanza a la siguiente sin terminar la anterior**, y cada decisión técnica se
 explica antes de implementarla.
 
-## FASE 1 — Arquitectura ✅ (entregada, pendiente de aprobación)
+> **Decisiones aprobadas (cierre de FASE 1):**
+> - **Estética:** se adopta la del portal MAFERSA (navy + dorado), congelada.
+> - **Productos:** CRUD completo desde el sistema (crear/editar/borrar) **además**
+>   de importar el catálogo inicial (3.536 productos).
+
+## FASE 1 — Arquitectura ✅ APROBADA
 
 Diseño del sistema mínimo: usuarios, productos y cambios de cantidad.
 - [x] Visión general y alcance (`01-overview.md`)
@@ -19,16 +24,17 @@ Diseño del sistema mínimo: usuarios, productos y cambios de cantidad.
 
 ---
 
-## FASE 2 — Configuración del proyecto
+## FASE 2 — Configuración del proyecto ✅ COMPLETADA
 
-- Next.js (App Router) + TypeScript estricto + TailwindCSS.
-- ESLint, Prettier.
-- Prisma con las 3 tablas + primera migración + `CHECK (quantity >= 0)`.
-- Seed: un usuario demo y algunos productos de ejemplo.
-- Design system base: tema claro/oscuro, primitivas `ui/` (incl. `QuantityStepper`).
-- CI: lint + typecheck + test.
+- [x] Next.js 15 (App Router) + React 19 + TypeScript estricto + TailwindCSS.
+- [x] ESLint, Prettier.
+- [x] Prisma con las 3 tablas + tablas de Auth.js + migración inicial + `CHECK (quantity >= 0)`.
+- [x] Seed: usuario admin + importación del catálogo real (`data/products.json`).
+- [x] Design system base: tokens MAFERSA, tema claro/oscuro, primitiva `QuantityStepper`.
+- [x] CI (GitHub Actions): lint + typecheck + build.
 
-**DoD:** `dev` levanta, migración y seed corren, CI en verde.
+**DoD:** build/typecheck/lint en verde (verificado). La migración y el seed se
+aplican al conectar una PostgreSQL vía `DATABASE_URL`.
 
 ---
 
@@ -43,13 +49,15 @@ Diseño del sistema mínimo: usuarios, productos y cambios de cantidad.
 
 ---
 
-## FASE 4 — Lista de productos (CRUD)
+## FASE 4 — Lista de productos (CRUD completo)
 
-- Pantalla principal: tabla de productos (códigos, nombre, cantidad).
-- Alta, edición y baja de productos.
-- Validación con Zod.
+- Pantalla principal: tabla de productos (marca, CÓD.MAF, CÓD.FÁBRICA, nombre, stock).
+- **Alta, edición y baja** de productos desde el sistema (formulario con Zod).
+- Importación del catálogo inicial desde `data/products.json`.
+- Validación de unicidad del código interno.
 
-**DoD:** se pueden administrar productos desde la interfaz.
+**DoD:** se pueden crear, editar y borrar productos desde la interfaz, y el
+catálogo inicial queda cargado.
 
 ---
 

@@ -48,13 +48,35 @@ Justificación en [`docs/architecture/02-tech-stack.md`](docs/architecture/02-te
 El catálogo real (3.536 productos de la lista MAFERSA) ya está extraído en
 [`data/`](data/README.md), listo para el seed.
 
+## Puesta en marcha (local)
+
+```bash
+# 1. Instalar dependencias
+npm install
+
+# 2. Configurar entorno
+cp .env.example .env        # completar DATABASE_URL y AUTH_SECRET
+
+# 3. Crear el esquema en PostgreSQL
+npx prisma migrate deploy   # aplica la migración inicial
+
+# 4. Cargar datos: usuario admin + catálogo real (3.536 productos)
+npm run db:seed
+
+# 5. Arrancar en desarrollo
+npm run dev                 # http://localhost:3000
+```
+
+Scripts útiles: `npm run typecheck`, `npm run lint`, `npm run build`,
+`npm run format`.
+
 ## Flujo de desarrollo
 
 No se avanza a la siguiente fase sin terminar la anterior.
 
-1. **FASE 1 — Arquitectura** ← *estás aquí*
-2. FASE 2 — Configuración del proyecto
-3. FASE 3 — Login
+1. **FASE 1 — Arquitectura** ✅ aprobada
+2. **FASE 2 — Configuración del proyecto** ✅ completada
+3. FASE 3 — Login ← *próxima*
 4. FASE 4 — Lista de productos (CRUD)
 5. FASE 5 — Ajuste de cantidad + historial
 6. FASE 6 — Buscador y detalle de producto

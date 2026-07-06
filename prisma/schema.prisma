@@ -1,0 +1,103 @@
+// MAFERSA — Control de stock
+// Modelo mínimo: usuarios, productos y cambios de cantidad (historial).
+// Tablas de Auth.js incluidas para la autenticación (FASE 3).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────── Negocio ───────────────────────────
+
+model User {
+  id           String           @id @default(cuid())
+  email        String           @unique
+  passwordHash String
+  name         String
+  lastLoginAt  DateTime?
+  changes      QuantityChange[]
+  accounts     Account[]
+  sessions     Session[]
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  @@map("users")
+}
+
+model Product {
+  id           String           @id @default(cuid())
+  internalCode String?          @unique // CÓD.MAF (código interno)
+  factoryCode  String? // CÓD.FÁBRICA (código de fábrica, puede repetirse)
+  brand        String?
+  name         String
+  quantity     Int              @default(0) // stock actual (>= 0)
+  changes      QuantityChange[]
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  @@index([name])
+  @@index([brand])
+  @@index([factoryCode])
+  @@map("products")
+}
+
+model QuantityChange {
+  id        String   @id @default(cuid())
+  product   Product  @relation(fields: [productId], references: [id])
+  productId String
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  before    Int
+  after     Int
+  delta     Int
+  note      String?
+  createdAt DateTime @default(now())
+
+  @@index([productId, createdAt])
+  @@index([userId])
+  @@map("quantity_changes")
+}
+
+// ─────────────────────── Auth.js (FASE 3) ───────────────────────
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}

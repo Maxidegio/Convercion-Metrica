@@ -1,0 +1,25 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx prisma generate
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run build
+        env:
+          # Valor ficticio: el build no accede a la BD, pero Prisma lo requiere presente.
+          DATABASE_URL: "postgresql://user:pass@localhost:5432/db?schema=public"
+          AUTH_SECRET: "ci-placeholder-secret-value-not-used"

@@ -1,0 +1,49 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/**
+ * Tokens de superficie temática (contenido).
+ * Los colores de marca (dorado) y chrome (navy) están en tailwind.config.ts.
+ */
+:root {
+  --card: #ffffff;
+  --surface: #f8fafc;
+  --border: #e7eaf0;
+  --ink: #1b2337;
+  --muted: #64748b;
+  --chip: #f1f5f9;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --card: #182135;
+    --surface: #141c2e;
+    --border: #2a3550;
+    --ink: #eaeef6;
+    --muted: #94a3b8;
+    --chip: #1e2a44;
+  }
+}
+
+:root[data-theme="dark"] {
+  --card: #182135;
+  --surface: #141c2e;
+  --border: #2a3550;
+  --ink: #eaeef6;
+  --muted: #94a3b8;
+  --chip: #1e2a44;
+}
+
+:root[data-theme="light"] {
+  --card: #ffffff;
+  --surface: #f8fafc;
+  --border: #e7eaf0;
+  --ink: #1b2337;
+  --muted: #64748b;
+  --chip: #f1f5f9;
+}
+
+body {
+  @apply bg-navy-900 text-ink antialiased;
+}
